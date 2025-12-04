@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Sistema de Gestión - Cursos y Estudiantes</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="styles.css"/>
+</head>
+<body class="bg-light">
+    <!-- Contenedor de Toasts -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;"></div>
+    
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center" href="#">
+                <i class="bi bi-mortarboard-fill me-2" style="font-size: 1.8rem;"></i>
+                <div>
+                    <span class="fw-bold" style="font-size: 1.3rem;">Sistema de Gestión Educativa</span>
+                    <small class="d-block opacity-75" style="font-size: 0.8rem;">Gestión de Cursos y Estudiantes</small>
+                </div>
+            </a>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-light text-primary px-3 py-2">
+                    <i class="bi bi-database-fill me-1"></i>MySQL
+                </span>
+                <span class="badge bg-light text-primary px-3 py-2">
+                    <i class="bi bi-server me-1"></i>Spring Boot
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Pestañas de navegación con Bootstrap -->
+    <div class="container-fluid mt-4">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-3">
+                <ul class="nav nav-pills nav-fill gap-3" id="mainTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active rounded-3 py-3" id="estudiantes-tab" data-bs-toggle="pill" data-bs-target="#tab-estudiantes" type="button" role="tab">
+                            <i class="bi bi-people-fill me-2 fs-5"></i>
+                            <span class="fw-semibold">Estudiantes</span>
+                            <small class="d-block opacity-75 mt-1">Gestionar alumnos</small>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-3 py-3" id="cursos-tab" data-bs-toggle="pill" data-bs-target="#tab-cursos" type="button" role="tab">
+                            <i class="bi bi-book-fill me-2 fs-5"></i>
+                            <span style="font-weight: 600;">Cursos</span>
+                            <small class="d-block text-muted mt-1" style="font-size: 0.75rem;">Gestionar cursos</small>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="asignacion-tab" data-bs-toggle="pill" data-bs-target="#tab-asignacion" type="button" role="tab" style="border-radius: 12px; padding: 15px;">
+                            <i class="bi bi-link-45deg me-2" style="font-size: 1.2rem;"></i>
+                            <span style="font-weight: 600;">Asignación</span>
+                            <small class="d-block text-muted mt-1" style="font-size: 0.75rem;">Vincular estudiantes</small>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid mt-4">
+        <div class="tab-content" id="mainTabContent">
+            <!-- TAB: ESTUDIANTES -->
+            <div class="tab-pane fade show active" id="tab-estudiantes" role="tabpanel">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card shadow-lg border-0 mb-4" style="border-radius: 15px; overflow: hidden;">
+                            <div class="card-header bg-primary text-white" style="padding: 1.5rem;">
+                                <h5 class="mb-0 d-flex align-items-center">
+                                    <div class="icon-circle me-3" style="width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                        <i class="bi bi-person-plus-fill"></i>
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 600;">Nuevo Estudiante</div>
+                                        <small style="font-weight: 400; opacity: 0.9;">Registrar nuevo alumno en el sistema</small>
+                                    </div>
+                                </h5>
+                            </div>
+                            <div class="card-body" style="padding: 2rem;">
+                                <form id="createEstudianteForm">
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-semibold"><i class="bi bi-card-text me-2 text-primary"></i>Cédula</label>
+                                            <input type="text" class="form-control form-control-lg" id="estCed" placeholder="Ej: 1234567890" required style="border-radius: 10px;">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-semibold"><i class="bi bi-person me-2 text-primary"></i>Nombres</label>
+                                            <input type="text" class="form-control form-control-lg" id="estNom" placeholder="Ej: Juan Carlos" required style="border-radius: 10px;">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-semibold"><i class="bi bi-person-badge me-2 text-primary"></i>Apellidos</label>
+                                            <input type="text" class="form-control form-control-lg" id="estApe" placeholder="Ej: García López" required style="border-radius: 10px;">
+                                        </div>
+                                        <div class="col-md-8">
+                                            <label class="form-label fw-semibold"><i class="bi bi-geo-alt me-2 text-primary"></i>Dirección</label>
+                                            <input type="text" class="form-control form-control-lg" id="estDir" placeholder="Ej: Av. Principal #123" required style="border-radius: 10px;">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-semibold"><i class="bi bi-telephone me-2 text-primary"></i>Teléfono</label>
+                                            <input type="text" class="form-control form-control-lg" id="estTel" placeholder="Ej: 0987654321" required style="border-radius: 10px;">
+                                        </div>
+                                    </div>
+                                    <div class="mt-4">
+                                        <button type="submit" class="btn btn-primary btn-lg fw-semibold" style="border-radius: 10px; padding: 12px 30px;">
+                                            <i class="bi bi-save me-2"></i>Guardar Estudiante
+                                        </button>
+                                    </div>
+                                </form>
+                                <div id="msgEstudiante" class="mt-3"></div>
+                            </div>
+                        </div>
+
+                        <div class="card shadow-lg border-0" style="border-radius: 15px; overflow: hidden;">
+                            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center" style="padding: 1.5rem;">
+                                <h5 class="mb-0 d-flex align-items-center">
+                                    <div class="icon-circle me-3" style="width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                        <i class="bi bi-list-ul"></i>
+                                    </div>
+                                    <span style="font-weight: 600;">Estudiantes Registrados</span>
+                                </h5>
+                                <button id="reloadEstudiantesBtn" class="btn btn-light btn-sm" style="border-radius: 8px; padding: 8px 16px; font-weight: 600;">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>Actualizar
+                                </button>
+                            </div>
+                            <div class="card-body" style="padding: 0;">
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0" id="tblEstudiantes">
+                                        <thead style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">
+                                            <tr>
+                                                <th style="padding: 1rem; font-weight: 600; border: none;"><i class="bi bi-card-text me-2 text-primary"></i>Cédula</th>
+                                                <th style="padding: 1rem; font-weight: 600; border: none;"><i class="bi bi-person me-2 text-primary"></i>Nombres</th>
+                                                <th style="padding: 1rem; font-weight: 600; border: none;"><i class="bi bi-person-badge me-2 text-primary"></i>Apellidos</th>
+                                                <th style="padding: 1rem; font-weight: 600; border: none;"><i class="bi bi-geo-alt me-2 text-primary"></i>Dirección</th>
+                                                <th style="padding: 1rem; font-weight: 600; border: none;"><i class="bi bi-telephone me-2 text-primary"></i>Teléfono</th>
+                                                <th style="padding: 1rem; font-weight: 600; border: none; text-align: center;"><i class="bi bi-gear me-2 text-primary"></i>Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: CURSOS -->
+            <div class="tab-pane fade" id="tab-cursos" role="tabpanel">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card shadow-lg border-0 mb-4" style="border-radius: 15px; overflow: hidden;">
+                            <div class="card-header bg-danger text-white" style="padding: 1.5rem;">
+                                <h5 class="mb-0 d-flex align-items-center">
+                                    <div class="icon-circle me-3" style="width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                        <i class="bi bi-journal-plus"></i>
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 600;">Nuevo Curso</div>
+                                        <small style="font-weight: 400; opacity: 0.9;">Registrar nueva materia en el sistema</small>
+                                    </div>
+                                </h5>
+                            </div>
+                            <div class="card-body" style="padding: 2rem;">
+                                <form id="createCursoForm">
+                                    <div class="row g-3">
+                                        <div class="col-md-8">
+                                            <label class="form-label fw-semibold"><i class="bi bi-book me-2 text-danger"></i>Nombre del Curso</label>
+                                            <input type="text" class="form-control form-control-lg" id="curNom" placeholder="Ej: Aplicaciones Orientadas a Servicios" required style="border-radius: 10px;">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-semibold"><i class="bi bi-star me-2 text-danger"></i>Créditos</label>
+                                            <input type="number" class="form-control form-control-lg" id="curCred" min="1" max="10" placeholder="Ej: 6" required style="border-radius: 10px;">
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label fw-semibold"><i class="bi bi-text-paragraph me-2 text-danger"></i>Descripción</label>
+                                            <textarea class="form-control form-control-lg" id="curDesc" rows="3" placeholder="Ej: Curso sobre desarrollo de aplicaciones con arquitectura orientada a servicios" style="border-radius: 10px;"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4">
+                                        <button type="submit" class="btn btn-danger btn-lg fw-semibold" style="border-radius: 10px; padding: 12px 30px;">
+                                            <i class="bi bi-save me-2"></i>Guardar Curso
+                                        </button>
+                                    </div>
+                                </form>
+                                <div id="msgCurso" class="mt-3"></div>
+                            </div>
+                        </div>
+
+                        <div class="card shadow-lg border-0" style="border-radius: 15px; overflow: hidden;">
+                            <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center" style="padding: 1.5rem;">
+                                <h5 class="mb-0 d-flex align-items-center">
+                                    <div class="icon-circle me-3" style="width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                        <i class="bi bi-list-ul"></i>
+                                    </div>
+                                    <span style="font-weight: 600;">Cursos Disponibles</span>
+                                </h5>
+                                <button id="reloadCursosBtn" class="btn btn-light btn-sm" style="border-radius: 8px; padding: 8px 16px; font-weight: 600;">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>Actualizar
+                                </button>
+                            </div>
+                            <div class="card-body" style="padding: 0;">
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0" id="tblCursos">
+                                        <thead style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">
+                                            <tr>
+                                                <th style="padding: 1rem; font-weight: 600; border: none;"><i class="bi bi-hash me-2 text-danger"></i>Código</th>
+                                                <th style="padding: 1rem; font-weight: 600; border: none;"><i class="bi bi-book me-2 text-danger"></i>Nombre</th>
+                                                <th style="padding: 1rem; font-weight: 600; border: none;"><i class="bi bi-text-paragraph me-2 text-danger"></i>Descripción</th>
+                                                <th style="padding: 1rem; font-weight: 600; border: none;"><i class="bi bi-star me-2 text-danger"></i>Créditos</th>
+                                                <th style="padding: 1rem; font-weight: 600; border: none; text-align: center;"><i class="bi bi-gear me-2 text-danger"></i>Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: ASIGNACIÓN -->
+            <div class="tab-pane fade" id="tab-asignacion" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="card shadow-lg border-0" style="border-radius: 15px; overflow: hidden;">
+                            <div class="card-header bg-info text-white" style="padding: 1.5rem;">
+                                <h5 class="mb-0 d-flex align-items-center">
+                                    <div class="icon-circle me-3" style="width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                        <i class="bi bi-link-45deg"></i>
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 600;">Asignar Estudiante</div>
+                                        <small style="font-weight: 400; opacity: 0.9;">Vincular alumno a un curso</small>
+                                    </div>
+                                </h5>
+                            </div>
+                            <div class="card-body" style="padding: 2rem;">
+                                <form id="asignarForm">
+                                    <div class="mb-4">
+                                        <label class="form-label fw-semibold"><i class="bi bi-person me-2 text-info"></i>Estudiante</label>
+                                        <select class="form-select form-select-lg" id="asignarEstudiante" required style="border-radius: 10px;">
+                                            <option value="">Seleccione un estudiante</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="form-label fw-semibold"><i class="bi bi-book me-2 text-info"></i>Curso</label>
+                                        <select class="form-select form-select-lg" id="asignarCurso" required style="border-radius: 10px;">
+                                            <option value="">Seleccione un curso</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-info btn-lg w-100 fw-semibold" style="border-radius: 10px; padding: 12px;">
+                                        <i class="bi bi-check-circle me-2"></i>Asignar a Curso
+                                    </button>
+                                </form>
+                                <div id="msgAsignacion" class="mt-3"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-4">
+                        <div class="card shadow-lg border-0" style="border-radius: 15px; overflow: hidden;">
+                            <div class="card-header bg-primary text-white" style="padding: 1.5rem;">
+                                <h5 class="mb-0 d-flex align-items-center">
+                                    <div class="icon-circle me-3" style="width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                        <i class="bi bi-search"></i>
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 600;">Consultar Curso</div>
+                                        <small style="font-weight: 400; opacity: 0.9;">Ver estudiantes de un curso</small>
+                                    </div>
+                                </h5>
+                            </div>
+                            <div class="card-body" style="padding: 2rem;">
+                                <form id="consultarForm">
+                                    <div class="mb-4">
+                                        <label class="fw-semibold mb-3 d-block"><i class="bi bi-funnel me-2"></i>Tipo de Consulta:</label>
+                                        <div class="row g-3">
+                                            <div class="col-12">
+                                                <input class="btn-check" type="radio" name="tipoConsulta" id="radioEstudiante" value="estudiante">
+                                                <label class="btn btn-outline-primary w-100 text-start p-3" for="radioEstudiante" style="border-radius: 12px; border-width: 2px;">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="me-3" style="font-size: 2rem;">
+                                                            <i class="bi bi-person-circle"></i>
+                                                        </div>
+                                                        <div class="flex-grow-1">
+                                                            <div class="fw-bold fs-6">Consultar curso de un estudiante</div>
+                                                            <small class="text-muted">Ver a qué curso pertenece un estudiante</small>
+                                                        </div>
+                                                        <i class="bi bi-check-circle-fill text-success" style="font-size: 1.5rem; display: none;"></i>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                            <div class="col-12">
+                                                <input class="btn-check" type="radio" name="tipoConsulta" id="radioCurso" value="curso" checked>
+                                                <label class="btn btn-outline-primary w-100 text-start p-3" for="radioCurso" style="border-radius: 12px; border-width: 2px;">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="me-3" style="font-size: 2rem;">
+                                                            <i class="bi bi-book"></i>
+                                                        </div>
+                                                        <div class="flex-grow-1">
+                                                            <div class="fw-bold fs-6">Consultar estudiantes de un curso</div>
+                                                            <small class="text-muted">Ver todos los estudiantes de un curso específico</small>
+                                                        </div>
+                                                        <i class="bi bi-check-circle-fill text-success" style="font-size: 1.5rem;"></i>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="consultaEstudiante" class="d-none">
+                                        <div class="mb-4">
+                                            <label class="form-label fw-semibold"><i class="bi bi-person me-2 text-primary"></i>Estudiante</label>
+                                            <select class="form-select form-select-lg" id="consultarEstudiante" style="border-radius: 10px;">
+                                                <option value="">Seleccione un estudiante</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div id="consultaCurso" class="d-block">
+                                        <div class="mb-4">
+                                            <label class="form-label fw-semibold"><i class="bi bi-book me-2 text-primary"></i>Curso</label>
+                                            <select class="form-select form-select-lg" id="consultarCurso" style="border-radius: 10px;">
+                                                <option value="">Seleccione un curso</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-lg w-100 fw-semibold" style="border-radius: 10px; padding: 12px;">
+                                        <i class="bi bi-search me-2"></i>Consultar
+                                    </button>
+                                </form>
+                                <div id="resultadoConsulta" class="mt-4"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Editar Estudiante -->
+    <div class="modal fade" id="editEstudianteDlg" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Editar Estudiante</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editEstudianteForm">
+                        <input type="hidden" name="estCed"/>
+                        <div class="mb-3">
+                            <label class="form-label">Nombres</label>
+                            <input type="text" class="form-control" name="estNom" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Apellidos</label>
+                            <input type="text" class="form-control" name="estApe" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Dirección</label>
+                            <input type="text" class="form-control" name="estDir" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Teléfono</label>
+                            <input type="text" class="form-control" name="estTel" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="saveEditEstudiante">
+                        <i class="bi bi-save me-2"></i>Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Editar Curso -->
+    <div class="modal fade" id="editCursoDlg" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Editar Curso</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editCursoForm">
+                        <input type="hidden" name="curId"/>
+                        <div class="mb-3">
+                            <label class="form-label">Nombre</label>
+                            <input type="text" class="form-control" name="curNom" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Créditos</label>
+                            <input type="number" class="form-control" name="curCreditos" min="1" max="10" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Descripción</label>
+                            <textarea class="form-control" name="curDesc" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" id="saveEditCurso">
+                        <i class="bi bi-save me-2"></i>Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Ver Estudiantes del Curso -->
+    <div class="modal fade" id="verEstudiantesDlg" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="tituloEstudiantes"></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="listaEstudiantes"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Confirmar Eliminar Estudiante -->
+    <div class="modal fade" id="confirmDeleteEstudianteDlg" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Confirmar Eliminación</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">¿Está seguro de eliminar este estudiante?</p>
+                    <p class="text-muted small mb-0">Esta acción no se puede deshacer.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteEstudiante">
+                        <i class="bi bi-trash me-2"></i>Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Confirmar Eliminar Curso -->
+    <div class="modal fade" id="confirmDeleteCursoDlg" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Confirmar Eliminación</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="confirmDeleteCursoContent">
+                        <p class="mb-0">¿Está seguro de eliminar este curso?</p>
+                        <p class="text-muted small mb-0">Esta acción no se puede deshacer.</p>
+                    </div>
+                    <div id="confirmDeleteCursoWithStudents" style="display: none;">
+                        <div class="alert alert-warning mb-4 d-flex align-items-center">
+                            <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 2rem;"></i>
+                            <div>
+                                <strong>Advertencia:</strong> Este curso tiene <span id="cursoEstudiantesCount" class="fw-bold"></span> estudiante(s) asignado(s).
+                            </div>
+                        </div>
+                        <p class="mb-3 fw-bold fs-6"><i class="bi bi-question-circle me-2"></i>¿Qué desea hacer con los estudiantes?</p>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <input class="btn-check" type="radio" name="deleteOption" id="deleteOptionKeep" value="keep" checked>
+                                <label class="btn btn-outline-success w-100 text-start p-3" for="deleteOptionKeep" style="border-radius: 12px; border-width: 2px;">
+                                    <div class="d-flex align-items-start">
+                                        <div class="me-3" style="font-size: 2rem;">
+                                            <i class="bi bi-shield-check"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="fw-bold fs-6 mb-1">Mantener los estudiantes</div>
+                                            <small class="text-muted d-block">Eliminar solo el curso. Los estudiantes quedarán sin curso asignado.</small>
+                                            <span class="badge bg-success mt-2"><i class="bi bi-star-fill me-1"></i>Recomendado</span>
+                                        </div>
+                                        <i class="bi bi-check-circle-fill text-success" style="font-size: 1.5rem;"></i>
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="col-12">
+                                <input class="btn-check" type="radio" name="deleteOption" id="deleteOptionDelete" value="delete">
+                                <label class="btn btn-outline-danger w-100 text-start p-3" for="deleteOptionDelete" style="border-radius: 12px; border-width: 2px;">
+                                    <div class="d-flex align-items-start">
+                                        <div class="me-3" style="font-size: 2rem;">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="fw-bold fs-6 mb-1 text-danger">Eliminar todo</div>
+                                            <small class="text-muted d-block">Eliminar el curso y todos los estudiantes asociados. Esta acción es irreversible.</small>
+                                            <span class="badge bg-danger mt-2"><i class="bi bi-exclamation-triangle me-1"></i>Peligroso</span>
+                                        </div>
+                                        <i class="bi bi-check-circle-fill text-danger" style="font-size: 1.5rem; display: none;"></i>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteCurso">
+                        <i class="bi bi-trash me-2"></i>Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js?v=30"></script>
+</body>
+</html>
