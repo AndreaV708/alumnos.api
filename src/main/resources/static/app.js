@@ -6,7 +6,7 @@
 // ============================================
 // CONFIGURACIÓN DE LA API
 // ============================================
-const API_BASE_URL = 'http://localhost:8081/api';
+const API_BASE_URL = '/api';
 const API_ENDPOINTS = {
     alumnos: `${API_BASE_URL}/alumnos`,
     cursos: `${API_BASE_URL}/cursos`
