@@ -707,10 +707,11 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-floating mb-3">
-                                    <input type="text" class="form-control" id="studentCedula" placeholder="Cédula" required maxlength="20">
+                                    <input type="text" class="form-control" id="studentCedula" placeholder="Cédula" required pattern="\d{10}" maxlength="10" title="La cédula debe tener exactamente 10 dígitos">
                                     <label for="studentCedula">
-                                        <i class="bi bi-card-text me-2"></i>Cédula
+                                        <i class="bi bi-card-text me-2"></i>Cédula (10 dígitos)
                                     </label>
+                                    <small class="text-muted">Ej: 1234567890</small>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -743,10 +744,11 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-floating mb-3">
-                                    <input type="tel" class="form-control" id="studentTelefono" placeholder="Teléfono" required maxlength="20">
+                                    <input type="tel" class="form-control" id="studentTelefono" placeholder="Teléfono" required pattern="\d{10}" maxlength="10" title="El teléfono debe tener exactamente 10 dígitos">
                                     <label for="studentTelefono">
-                                        <i class="bi bi-telephone-fill me-2"></i>Teléfono
+                                        <i class="bi bi-telephone-fill me-2"></i>Teléfono (10 dígitos)
                                     </label>
+                                    <small class="text-muted">Ej: 0987654321</small>
                                 </div>
                             </div>
                            

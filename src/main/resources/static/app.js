@@ -505,12 +505,29 @@ async function saveStudent() {
     const cursoSelect = document.getElementById('studentCurso');
     const cursoValue = cursoSelect ? cursoSelect.value : '';
     
+    const cedula = document.getElementById('studentCedula').value.trim();
+    const telefono = document.getElementById('studentTelefono').value.trim();
+    
+    // Validar cédula (debe tener exactamente 10 dígitos)
+    if (cedula.length !== 10 || !/^\d{10}$/.test(cedula)) {
+        showToast('⚠️ La cédula debe tener exactamente 10 dígitos numéricos', 'warning');
+        document.getElementById('studentCedula').focus();
+        return;
+    }
+    
+    // Validar teléfono (debe tener exactamente 10 dígitos)
+    if (telefono.length !== 10 || !/^\d{10}$/.test(telefono)) {
+        showToast('⚠️ El teléfono debe tener exactamente 10 dígitos numéricos', 'warning');
+        document.getElementById('studentTelefono').focus();
+        return;
+    }
+    
     const studentData = {
-        estCed: document.getElementById('studentCedula').value,
-        estNom: document.getElementById('studentNombre').value,
-        estApe: document.getElementById('studentApellido').value,
-        estDir: document.getElementById('studentDireccion').value,
-        estTel: document.getElementById('studentTelefono').value,
+        estCed: cedula,
+        estNom: document.getElementById('studentNombre').value.trim(),
+        estApe: document.getElementById('studentApellido').value.trim(),
+        estDir: document.getElementById('studentDireccion').value.trim(),
+        estTel: telefono,
         curId: cursoValue !== '' ? parseInt(cursoValue) : null
     };
 
