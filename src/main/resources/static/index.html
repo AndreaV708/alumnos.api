@@ -716,20 +716,22 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-floating mb-3">
-                                    <input type="text" class="form-control" id="studentNombre" placeholder="Nombre" required maxlength="100">
+                                    <input type="text" class="form-control" id="studentNombre" placeholder="Nombre" required maxlength="100" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+" title="El nombre solo debe contener letras">
                                     <label for="studentNombre">
                                         <i class="bi bi-person-fill me-2"></i>Nombre
                                     </label>
+                                    <small class="text-muted">Solo letras</small>
                                 </div>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-floating mb-3">
-                                    <input type="text" class="form-control" id="studentApellido" placeholder="Apellido" required maxlength="100">
+                                    <input type="text" class="form-control" id="studentApellido" placeholder="Apellido" required maxlength="100" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+" title="El apellido solo debe contener letras">
                                     <label for="studentApellido">
                                         <i class="bi bi-person-fill me-2"></i>Apellido
                                     </label>
+                                    <small class="text-muted">Solo letras</small>
                                 </div>
                             </div>
                             <div class="col-md-6">

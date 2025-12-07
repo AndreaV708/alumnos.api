@@ -506,12 +506,28 @@ async function saveStudent() {
     const cursoValue = cursoSelect ? cursoSelect.value : '';
     
     const cedula = document.getElementById('studentCedula').value.trim();
+    const nombre = document.getElementById('studentNombre').value.trim();
+    const apellido = document.getElementById('studentApellido').value.trim();
     const telefono = document.getElementById('studentTelefono').value.trim();
     
     // Validar cédula (debe tener exactamente 10 dígitos)
     if (cedula.length !== 10 || !/^\d{10}$/.test(cedula)) {
         showToast('⚠️ La cédula debe tener exactamente 10 dígitos numéricos', 'warning');
         document.getElementById('studentCedula').focus();
+        return;
+    }
+    
+    // Validar nombre (solo letras y espacios)
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre)) {
+        showToast('⚠️ El nombre solo debe contener letras', 'warning');
+        document.getElementById('studentNombre').focus();
+        return;
+    }
+    
+    // Validar apellido (solo letras y espacios)
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(apellido)) {
+        showToast('⚠️ El apellido solo debe contener letras', 'warning');
+        document.getElementById('studentApellido').focus();
         return;
     }
     
@@ -524,8 +540,8 @@ async function saveStudent() {
     
     const studentData = {
         estCed: cedula,
-        estNom: document.getElementById('studentNombre').value.trim(),
-        estApe: document.getElementById('studentApellido').value.trim(),
+        estNom: nombre,
+        estApe: apellido,
         estDir: document.getElementById('studentDireccion').value.trim(),
         estTel: telefono,
         curId: cursoValue !== '' ? parseInt(cursoValue) : null
