@@ -607,48 +607,61 @@
             </h3>
         </div>
         
+        <!-- Consulta 1: Buscar Estudiantes por Curso -->
         <div class="card card-custom mb-4">
             <div class="card-body">
-                <h6 class="mb-3"><i class="bi bi-search me-2"></i>Buscar Estudiantes por Curso</h6>
-                <div class="row">
-                    <div class="col-md-8">
-                        <div class="form-floating mb-3">
-                            <input type="text" class="form-control" id="courseNameForStudents" placeholder="Título del curso">
-                            <label for="courseNameForStudents">
-                                <i class="bi bi-book-fill me-2"></i>Título del Curso
-                            </label>
+                <h5 class="mb-3"><i class="bi bi-book-fill me-2" style="color: var(--wine-red);"></i>Consultar Estudiantes por Curso</h5>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text" class="form-control" id="courseNameForStudents" placeholder="Buscar por título del curso (Ej: 11)...">
+                            <button type="button" class="btn btn-secondary" onclick="searchCourseForQuery()">
+                                <i class="bi bi-search me-2"></i>Buscar
+                            </button>
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <button type="button" class="btn btn-wine w-100" onclick="searchAndGetStudentsByCourse()" style="height: 58px;">
-                            <i class="bi bi-search me-2"></i>Buscar y Consultar
+                        <select class="form-select" id="courseSelectForQuery" disabled onchange="getStudentsByCourseId()">
+                            <option value="">Curso encontrado aparecerá aquí</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-wine w-100" onclick="getStudentsByCourseId()">
+                            <i class="bi bi-list-ul me-2"></i>Ver
                         </button>
                     </div>
                 </div>
                 
-                <hr class="my-4">
-                
-                <h6 class="mb-3"><i class="bi bi-search me-2"></i>Buscar Curso por Estudiante</h6>
-                <div class="row">
-                    <div class="col-md-8">
-                        <div class="form-floating mb-3">
-                            <input type="text" class="form-control" id="studentCedulaForCourse" placeholder="Cédula" maxlength="20">
-                            <label for="studentCedulaForCourse">
-                                <i class="bi bi-card-text me-2"></i>Cédula del Estudiante
-                            </label>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <button type="button" class="btn btn-wine w-100" onclick="getCourseByStudent()" style="height: 58px;">
-                            <i class="bi bi-search me-2"></i>Buscar y Consultar
-                        </button>
-                    </div>
-                </div>
+                <!-- Resultado de esta consulta -->
+                <div id="queryResultsCourse"></div>
             </div>
         </div>
         
-        <!-- Resultados dinámicos -->
-        <div id="queryResults"></div>
+        <!-- Consulta 2: Buscar Curso por Estudiante -->
+        <div class="card card-custom mb-4">
+            <div class="card-body">
+                <h5 class="mb-3"><i class="bi bi-person-fill me-2" style="color: var(--wine-red);"></i>Consultar Curso por Estudiante</h5>
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-card-text"></i>
+                            </span>
+                            <input type="text" class="form-control" id="studentCedulaForCourse" placeholder="Buscar por cédula del estudiante..." maxlength="20">
+                            <button type="button" class="btn btn-wine" onclick="getCourseByStudent()">
+                                <i class="bi bi-search me-2"></i>Buscar y Consultar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Resultado de esta consulta -->
+                <div id="queryResultsStudent"></div>
+            </div>
+        </div>
     </div>
 
     <!-- Assignment Section -->
@@ -661,63 +674,58 @@
         
         <div class="card card-custom">
             <div class="card-body">
-                <form id="assignmentForm">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="form-floating mb-3">
-                                <input type="text" class="form-control" id="assignStudentCedula" placeholder="Cédula del estudiante" maxlength="20" required>
-                                <label for="assignStudentCedula">
-                                    <i class="bi bi-card-text me-2"></i>Cédula del Estudiante
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <button type="button" class="btn btn-secondary w-100" onclick="searchStudentForAssignment()" style="height: 58px;">
-                                <i class="bi bi-search me-2"></i>Buscar
-                            </button>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-floating mb-3">
-                                <input type="text" class="form-control" id="assignCourseName" placeholder="Título del curso" required>
-                                <label for="assignCourseName">
-                                    <i class="bi bi-book-fill me-2"></i>Título del Curso
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <button type="button" class="btn btn-secondary w-100" onclick="searchCourseForAssignment()" style="height: 58px;">
+                <!-- Buscador de Estudiante -->
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-card-text"></i>
+                            </span>
+                            <input type="text" class="form-control" id="assignStudentCedula" placeholder="Buscar estudiante por cédula (Ej: 11)..." maxlength="20">
+                            <button type="button" class="btn btn-secondary" onclick="searchStudentForAssignment()">
                                 <i class="bi bi-search me-2"></i>Buscar
                             </button>
                         </div>
                     </div>
-                    <div class="row" id="assignmentSearchResults" style="display: none;">
-                        <div class="col-md-5">
-                            <div class="form-floating mb-3">
-                                <select class="form-select" id="assignStudentSelect" disabled>
-                                    <option value="">Estudiante seleccionado aparecerá aquí</option>
-                                </select>
-                                <label for="assignStudentSelect">
-                                    <i class="bi bi-person-fill me-2"></i>Estudiante Encontrado
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-md-5">
-                            <div class="form-floating mb-3">
-                                <select class="form-select" id="assignCourseSelect" disabled>
-                                    <option value="">Curso seleccionado aparecerá aquí</option>
-                                </select>
-                                <label for="assignCourseSelect">
-                                    <i class="bi bi-book-fill me-2"></i>Curso Encontrado
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <button type="button" class="btn btn-wine w-100" onclick="assignStudentToCourse()" style="height: 58px;">
-                                <i class="bi bi-plus-circle me-2"></i>Asignar
+                    <div class="col-md-4">
+                        <select class="form-select" id="assignStudentSelect" disabled>
+                            <option value="">Estudiante encontrado aparecerá aquí</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Buscador de Curso -->
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-book-fill"></i>
+                            </span>
+                            <input type="text" class="form-control" id="assignCourseName" placeholder="Buscar curso por título (Ej: 11)..." maxlength="100">
+                            <button type="button" class="btn btn-secondary" onclick="searchCourseForAssignment()">
+                                <i class="bi bi-search me-2"></i>Buscar
                             </button>
                         </div>
                     </div>
-                </form>
+                    <div class="col-md-4">
+                        <select class="form-select" id="assignCourseSelect" disabled>
+                            <option value="">Curso encontrado aparecerá aquí</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Botón Asignar -->
+                <div class="row">
+                    <div class="col-12 text-end">
+                        <button type="button" class="btn btn-wine btn-lg" onclick="assignStudentToCourse()">
+                            <i class="bi bi-plus-circle me-2"></i>Asignar Curso al Estudiante
+                        </button>
+                    </div>
+                </div>
+                
+                <hr class="my-3">
+                
+                <!-- Resultados -->
                 <div id="assignmentResults"></div>
             </div>
         </div>

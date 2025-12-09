@@ -364,94 +364,139 @@ function renderCoursesTable(coursesData = null) {
 // ============================================
 
 /**
- * Poblar select de cursos
+ * Poblar select de cursos en modal de estudiante
  */
 function populateCourseSelect() {
     const select = document.getElementById('studentCurso');
-    const consultaSelect = document.getElementById('courseSelectForStudents');
     
-    if (select) {
+    if (select && courses && Array.isArray(courses)) {
         select.innerHTML = '<option value="">Sin curso asignado</option>';
-        
-        if (courses && Array.isArray(courses)) {
-            courses.forEach(course => {
-                if (course && course.curId && course.curNom) {
-                    select.innerHTML += `<option value="${course.curId}">${course.curNom}</option>`;
-                }
-            });
-        }
-    }
-    
-    if (consultaSelect) {
-        consultaSelect.innerHTML = '<option value="">Seleccionar curso...</option>';
-        
-        if (courses && Array.isArray(courses)) {
-            courses.forEach(course => {
-                if (course && course.curId && course.curNom) {
-                    consultaSelect.innerHTML += `<option value="${course.curId}">${course.curNom}</option>`;
-                }
-            });
-        }
+        courses.forEach(course => {
+            if (course && course.curId && course.curNom) {
+                select.innerHTML += `<option value="${course.curId}">${course.curNom}</option>`;
+            }
+        });
     }
 }
 
 /**
- * Poblar select de cursos para consultas (ahora solo limpia los campos)
+ * Poblar select de cursos para consultas (limpiar campos)
  */
 function populateQueryCourseSelect() {
-    // Limpiar campos de búsqueda
     const courseNameInput = document.getElementById('courseNameForStudents');
     const studentCedulaInput = document.getElementById('studentCedulaForCourse');
-    const resultsDiv = document.getElementById('queryResults');
+    const courseSelect = document.getElementById('courseSelectForQuery');
+    const queryResultsCourse = document.getElementById('queryResultsCourse');
+    const queryResultsStudent = document.getElementById('queryResultsStudent');
     
     if (courseNameInput) courseNameInput.value = '';
     if (studentCedulaInput) studentCedulaInput.value = '';
-    if (resultsDiv) {
-        resultsDiv.innerHTML = '<div class="alert alert-info text-center"><i class="bi bi-info-circle me-2"></i>Utilice los buscadores para realizar consultas.</div>';
+    if (courseSelect) {
+        courseSelect.innerHTML = '<option value="">Curso encontrado aparecerá aquí</option>';
+        courseSelect.disabled = true;
+    }
+    if (queryResultsCourse) {
+        queryResultsCourse.innerHTML = '';
+    }
+    if (queryResultsStudent) {
+        queryResultsStudent.innerHTML = '';
     }
 }
 
 /**
- * Poblar selects para asignación
+ * Buscar curso para consulta
  */
-function populateAssignmentSelects() {
-    // Limpiar campos de búsqueda
-    const studentCedulaInput = document.getElementById('assignStudentCedula');
-    const courseNameInput = document.getElementById('assignCourseName');
-    const resultsDiv = document.getElementById('assignmentSearchResults');
-    const assignmentResults = document.getElementById('assignmentResults');
+async function searchCourseForQuery() {
+    const courseNameInput = document.getElementById('courseNameForStudents').value.trim();
+    const courseSelect = document.getElementById('courseSelectForQuery');
+    const queryResultsCourse = document.getElementById('queryResultsCourse');
     
-    if (studentCedulaInput) studentCedulaInput.value = '';
-    if (courseNameInput) courseNameInput.value = '';
-    if (resultsDiv) resultsDiv.style.display = 'none';
-    if (assignmentResults) {
-        assignmentResults.innerHTML = '<div class="alert alert-info text-center"><i class="bi bi-info-circle me-2"></i>Busque un estudiante por cédula y un curso por título para realizar la asignación.</div>';
-    }
-}
-
-/**
- * Buscar estudiante para asignación
- */
-async function searchStudentForAssignment() {
-    const cedula = document.getElementById('assignStudentCedula').value.trim();
-    const studentSelect = document.getElementById('assignStudentSelect');
-    const resultsDiv = document.getElementById('assignmentSearchResults');
-    
-    if (!cedula) {
-        showToast('Por favor, ingrese una cédula', 'warning');
+    if (!courseNameInput) {
+        showToast('Ingrese un título para buscar', 'warning');
         return;
     }
     
     try {
-        const response = await fetch(`${API_ENDPOINTS.alumnos}/${cedula}`);
+        const foundCourses = courses.filter(course => 
+            course.curNom.toLowerCase().includes(courseNameInput.toLowerCase())
+        );
+        
+        if (foundCourses.length > 0) {
+            courseSelect.innerHTML = '';
+            foundCourses.forEach(course => {
+                courseSelect.innerHTML += `<option value="${course.curId}">${course.curNom} - ${course.curCreditos} créditos</option>`;
+            });
+            courseSelect.disabled = false;
+            queryResultsCourse.innerHTML = '';
+            showToast(`${foundCourses.length} curso(s) encontrado(s)`, 'success');
+        } else {
+            courseSelect.innerHTML = '<option value="">No se encontraron cursos</option>';
+            courseSelect.disabled = true;
+            queryResultsCourse.innerHTML = '<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>No se encontraron cursos con ese título.</div>';
+            showToast('No se encontraron cursos', 'warning');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('Error al buscar curso', 'danger');
+    }
+}
+
+/**
+ * Poblar selects para asignación (limpiar campos)
+ */
+function populateAssignmentSelects() {
+    const studentCedulaInput = document.getElementById('assignStudentCedula');
+    const courseNameInput = document.getElementById('assignCourseName');
+    const studentSelect = document.getElementById('assignStudentSelect');
+    const courseSelect = document.getElementById('assignCourseSelect');
+    const assignmentResults = document.getElementById('assignmentResults');
+    
+    if (studentCedulaInput) studentCedulaInput.value = '';
+    if (courseNameInput) courseNameInput.value = '';
+    if (studentSelect) {
+        studentSelect.innerHTML = '<option value="">Estudiante encontrado aparecerá aquí</option>';
+        studentSelect.disabled = true;
+    }
+    if (courseSelect) {
+        courseSelect.innerHTML = '<option value="">Curso encontrado aparecerá aquí</option>';
+        courseSelect.disabled = true;
+    }
+    if (assignmentResults) {
+        assignmentResults.innerHTML = '<div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>Busque un estudiante y un curso para realizar la asignación.</div>';
+    }
+}
+
+/**
+ * Buscar estudiante para asignación por cédula
+ */
+async function searchStudentForAssignment() {
+    const cedulaInput = document.getElementById('assignStudentCedula').value.trim();
+    const studentSelect = document.getElementById('assignStudentSelect');
+    
+    if (!cedulaInput) {
+        showToast('Ingrese una cédula para buscar', 'warning');
+        return;
+    }
+    
+    try {
+        // Buscar estudiantes que contengan el texto ingresado
+        const response = await fetch(`${API_ENDPOINTS.alumnos}/buscar?cedula=${encodeURIComponent(cedulaInput)}`);
+        
         if (response.ok) {
-            const student = await response.json();
-            studentSelect.innerHTML = `<option value="${student.estCed}">${student.estNom} ${student.estApe} - ${student.estCed}</option>`;
-            resultsDiv.style.display = 'block';
-            showToast('Estudiante encontrado', 'success');
-        } else if (response.status === 404) {
-            showToast('Estudiante no encontrado', 'danger');
-            studentSelect.innerHTML = '<option value="">Estudiante no encontrado</option>';
+            const foundStudents = await response.json();
+            
+            if (foundStudents.length > 0) {
+                studentSelect.innerHTML = '';
+                foundStudents.forEach(student => {
+                    studentSelect.innerHTML += `<option value="${student.estCed}">${student.estCed} - ${student.estNom} ${student.estApe}</option>`;
+                });
+                studentSelect.disabled = false;
+                showToast(`${foundStudents.length} estudiante(s) encontrado(s)`, 'success');
+            } else {
+                studentSelect.innerHTML = '<option value="">No se encontraron estudiantes</option>';
+                studentSelect.disabled = true;
+                showToast('No se encontraron estudiantes', 'warning');
+            }
         } else {
             showToast('Error al buscar estudiante', 'danger');
         }
@@ -462,22 +507,21 @@ async function searchStudentForAssignment() {
 }
 
 /**
- * Buscar curso para asignación
+ * Buscar curso para asignación por título
  */
 async function searchCourseForAssignment() {
-    const courseName = document.getElementById('assignCourseName').value.trim();
+    const courseNameInput = document.getElementById('assignCourseName').value.trim();
     const courseSelect = document.getElementById('assignCourseSelect');
-    const resultsDiv = document.getElementById('assignmentSearchResults');
     
-    if (!courseName) {
-        showToast('Por favor, ingrese un título de curso', 'warning');
+    if (!courseNameInput) {
+        showToast('Ingrese un título para buscar', 'warning');
         return;
     }
     
     try {
-        // Buscar en la lista de cursos cargados
+        // Buscar cursos que contengan el texto ingresado
         const foundCourses = courses.filter(course => 
-            course.curNom.toLowerCase().includes(courseName.toLowerCase())
+            course.curNom.toLowerCase().includes(courseNameInput.toLowerCase())
         );
         
         if (foundCourses.length > 0) {
@@ -485,11 +529,12 @@ async function searchCourseForAssignment() {
             foundCourses.forEach(course => {
                 courseSelect.innerHTML += `<option value="${course.curId}">${course.curNom} - ${course.curCreditos} créditos</option>`;
             });
-            resultsDiv.style.display = 'block';
+            courseSelect.disabled = false;
             showToast(`${foundCourses.length} curso(s) encontrado(s)`, 'success');
         } else {
-            showToast('No se encontraron cursos con ese título', 'warning');
             courseSelect.innerHTML = '<option value="">No se encontraron cursos</option>';
+            courseSelect.disabled = true;
+            showToast('No se encontraron cursos', 'warning');
         }
     } catch (error) {
         console.error('Error:', error);
@@ -884,71 +929,20 @@ async function assignStudentToCourse() {
 // ============================================
 
 /**
- * Buscar curso por título y obtener sus estudiantes
+ * Obtener estudiantes por ID de curso desde el selector
  */
-async function searchAndGetStudentsByCourse() {
-    const courseName = document.getElementById('courseNameForStudents').value.trim();
-    const resultsDiv = document.getElementById('queryResults');
+async function getStudentsByCourseId() {
+    const courseSelect = document.getElementById('courseSelectForQuery');
+    const cursoId = courseSelect.value;
+    const resultsDiv = document.getElementById('queryResultsCourse');
     
-    if (!courseName) {
-        showToast('Por favor, ingrese un título de curso', 'warning');
+    if (!cursoId) {
+        showToast('Seleccione un curso del selector', 'warning');
         return;
     }
     
-    try {
-        // Buscar cursos que coincidan con el título
-        const foundCourses = courses.filter(course => 
-            course.curNom.toLowerCase().includes(courseName.toLowerCase())
-        );
-        
-        if (foundCourses.length === 0) {
-            resultsDiv.innerHTML = `
-                <div class="alert alert-warning">
-                    <i class="bi bi-exclamation-triangle me-2"></i>
-                    No se encontraron cursos con ese título.
-                </div>
-            `;
-            return;
-        }
-        
-        // Si hay múltiples cursos, mostrar lista para que elija
-        if (foundCourses.length > 1) {
-            let html = `
-                <div class="alert alert-info">
-                    <h6><i class="bi bi-book-fill me-2"></i>Se encontraron ${foundCourses.length} cursos. Seleccione uno:</h6>
-                    <div class="list-group mt-2">
-            `;
-            
-            foundCourses.forEach(course => {
-                html += `
-                    <button type="button" class="list-group-item list-group-item-action" onclick="getStudentsByCourseId(${course.curId}, '${course.curNom}')">
-                        <strong>${course.curNom}</strong> - ${course.curCreditos} créditos
-                    </button>
-                `;
-            });
-            
-            html += `
-                    </div>
-                </div>
-            `;
-            resultsDiv.innerHTML = html;
-            return;
-        }
-        
-        // Si solo hay un curso, obtener sus estudiantes directamente
-        await getStudentsByCourseId(foundCourses[0].curId, foundCourses[0].curNom);
-        
-    } catch (error) {
-        console.error('Error:', error);
-        showToast('Error al buscar cursos', 'danger');
-    }
-}
-
-/**
- * Obtener estudiantes por ID de curso
- */
-async function getStudentsByCourseId(cursoId, cursoNombre) {
-    const resultsDiv = document.getElementById('queryResults');
+    const selectedOption = courseSelect.options[courseSelect.selectedIndex];
+    const cursoNombre = selectedOption.text;
     
     try {
         const response = await fetch(`${API_ENDPOINTS.cursos}/${cursoId}/estudiantes`);
@@ -1011,7 +1005,7 @@ async function getStudentsByCourseId(cursoId, cursoNombre) {
  */
 async function getCourseByStudent() {
     const cedula = document.getElementById('studentCedulaForCourse').value.trim();
-    const resultsDiv = document.getElementById('queryResults');
+    const resultsDiv = document.getElementById('queryResultsStudent');
     
     if (!cedula) {
         showToast('Por favor, ingrese una cédula', 'warning');
