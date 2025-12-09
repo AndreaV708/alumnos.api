@@ -74,18 +74,10 @@ function applyRolePermissions(userRole) {
             assignmentNav.parentElement.style.display = 'none';
         }
         
-        // Hacer que la card de cursos muestre mensaje en lugar de acceder
+        // Ocultar completamente la card de cursos para secretaria
         const cursosCard = document.getElementById('cursosCard');
         if (cursosCard) {
-            const cardElement = cursosCard.querySelector('.card');
-            if (cardElement) {
-                cardElement.style.opacity = '0.6';
-                cardElement.style.cursor = 'not-allowed';
-                const textElement = cursosCard.querySelector('.card-text');
-                if (textElement) {
-                    textElement.textContent = 'Solo consulta';
-                }
-            }
+            cursosCard.style.display = 'none';
         }
         
         // Ocultar la card de asignación para secretaria
