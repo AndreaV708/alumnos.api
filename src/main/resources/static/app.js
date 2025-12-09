@@ -49,6 +49,11 @@ function checkRoleAndShowSection(section) {
         return;
     }
     
+    if (section === 'assignment' && currentUser.rol === 'SECRETARIA') {
+        showToast('No tienes permisos para asignar cursos', 'warning');
+        return;
+    }
+    
     showSection(section);
 }
 
@@ -63,6 +68,12 @@ function applyRolePermissions(userRole) {
             cursosNav.parentElement.style.display = 'none';
         }
         
+        // Ocultar sección de asignación para secretaria
+        const assignmentNav = document.querySelector('a[onclick="showSection(\'assignment\')"]');
+        if (assignmentNav) {
+            assignmentNav.parentElement.style.display = 'none';
+        }
+        
         // Hacer que la card de cursos muestre mensaje en lugar de acceder
         const cursosCard = document.getElementById('cursosCard');
         if (cursosCard) {
@@ -75,6 +86,12 @@ function applyRolePermissions(userRole) {
                     textElement.textContent = 'Solo consulta';
                 }
             }
+        }
+        
+        // Ocultar la card de asignación para secretaria
+        const assignmentCard = document.querySelector('.col-lg-3:has([onclick*="assignment"])');
+        if (assignmentCard) {
+            assignmentCard.style.display = 'none';
         }
         
         // Actualizar el mensaje de bienvenida
@@ -379,19 +396,18 @@ function populateCourseSelect() {
 }
 
 /**
- * Poblar select de cursos para consultas
+ * Poblar select de cursos para consultas (ahora solo limpia los campos)
  */
 function populateQueryCourseSelect() {
-    const select = document.getElementById('courseIdForStudents');
+    // Limpiar campos de búsqueda
+    const courseNameInput = document.getElementById('courseNameForStudents');
+    const studentCedulaInput = document.getElementById('studentCedulaForCourse');
+    const resultsDiv = document.getElementById('queryResults');
     
-    if (select && courses && Array.isArray(courses)) {
-        select.innerHTML = '<option value="">Seleccione un curso</option>';
-        
-        courses.forEach(course => {
-            if (course && course.curId && course.curNom) {
-                select.innerHTML += `<option value="${course.curId}">${course.curNom} - ${course.curCreditos} créditos</option>`;
-            }
-        });
+    if (courseNameInput) courseNameInput.value = '';
+    if (studentCedulaInput) studentCedulaInput.value = '';
+    if (resultsDiv) {
+        resultsDiv.innerHTML = '<div class="alert alert-info text-center"><i class="bi bi-info-circle me-2"></i>Utilice los buscadores para realizar consultas.</div>';
     }
 }
 
@@ -399,25 +415,85 @@ function populateQueryCourseSelect() {
  * Poblar selects para asignación
  */
 function populateAssignmentSelects() {
-    const studentSelect = document.getElementById('assignStudentSelect');
-    const courseSelect = document.getElementById('assignCourseSelect');
+    // Limpiar campos de búsqueda
+    const studentCedulaInput = document.getElementById('assignStudentCedula');
+    const courseNameInput = document.getElementById('assignCourseName');
+    const resultsDiv = document.getElementById('assignmentSearchResults');
+    const assignmentResults = document.getElementById('assignmentResults');
     
-    if (studentSelect && students && Array.isArray(students)) {
-        studentSelect.innerHTML = '<option value="">Seleccione un estudiante</option>';
-        students.forEach(student => {
-            if (student && student.estCed && student.estNom) {
-                studentSelect.innerHTML += `<option value="${student.estCed}">${student.estNom} ${student.estApe} - ${student.estCed}</option>`;
-            }
-        });
+    if (studentCedulaInput) studentCedulaInput.value = '';
+    if (courseNameInput) courseNameInput.value = '';
+    if (resultsDiv) resultsDiv.style.display = 'none';
+    if (assignmentResults) {
+        assignmentResults.innerHTML = '<div class="alert alert-info text-center"><i class="bi bi-info-circle me-2"></i>Busque un estudiante por cédula y un curso por título para realizar la asignación.</div>';
+    }
+}
+
+/**
+ * Buscar estudiante para asignación
+ */
+async function searchStudentForAssignment() {
+    const cedula = document.getElementById('assignStudentCedula').value.trim();
+    const studentSelect = document.getElementById('assignStudentSelect');
+    const resultsDiv = document.getElementById('assignmentSearchResults');
+    
+    if (!cedula) {
+        showToast('Por favor, ingrese una cédula', 'warning');
+        return;
     }
     
-    if (courseSelect && courses && Array.isArray(courses)) {
-        courseSelect.innerHTML = '<option value="">Seleccione un curso</option>';
-        courses.forEach(course => {
-            if (course && course.curId && course.curNom) {
+    try {
+        const response = await fetch(`${API_ENDPOINTS.alumnos}/${cedula}`);
+        if (response.ok) {
+            const student = await response.json();
+            studentSelect.innerHTML = `<option value="${student.estCed}">${student.estNom} ${student.estApe} - ${student.estCed}</option>`;
+            resultsDiv.style.display = 'block';
+            showToast('Estudiante encontrado', 'success');
+        } else if (response.status === 404) {
+            showToast('Estudiante no encontrado', 'danger');
+            studentSelect.innerHTML = '<option value="">Estudiante no encontrado</option>';
+        } else {
+            showToast('Error al buscar estudiante', 'danger');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('Error de conexión', 'danger');
+    }
+}
+
+/**
+ * Buscar curso para asignación
+ */
+async function searchCourseForAssignment() {
+    const courseName = document.getElementById('assignCourseName').value.trim();
+    const courseSelect = document.getElementById('assignCourseSelect');
+    const resultsDiv = document.getElementById('assignmentSearchResults');
+    
+    if (!courseName) {
+        showToast('Por favor, ingrese un título de curso', 'warning');
+        return;
+    }
+    
+    try {
+        // Buscar en la lista de cursos cargados
+        const foundCourses = courses.filter(course => 
+            course.curNom.toLowerCase().includes(courseName.toLowerCase())
+        );
+        
+        if (foundCourses.length > 0) {
+            courseSelect.innerHTML = '';
+            foundCourses.forEach(course => {
                 courseSelect.innerHTML += `<option value="${course.curId}">${course.curNom} - ${course.curCreditos} créditos</option>`;
-            }
-        });
+            });
+            resultsDiv.style.display = 'block';
+            showToast(`${foundCourses.length} curso(s) encontrado(s)`, 'success');
+        } else {
+            showToast('No se encontraron cursos con ese título', 'warning');
+            courseSelect.innerHTML = '<option value="">No se encontraron cursos</option>';
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('Error al buscar curso', 'danger');
     }
 }
 
@@ -808,16 +884,71 @@ async function assignStudentToCourse() {
 // ============================================
 
 /**
- * Obtener estudiantes por curso
+ * Buscar curso por título y obtener sus estudiantes
  */
-async function getStudentsByCourse() {
-    const cursoId = document.getElementById('courseIdForStudents').value;
+async function searchAndGetStudentsByCourse() {
+    const courseName = document.getElementById('courseNameForStudents').value.trim();
     const resultsDiv = document.getElementById('queryResults');
     
-    if (!cursoId) {
-        showToast('Por favor, seleccione un curso', 'warning');
+    if (!courseName) {
+        showToast('Por favor, ingrese un título de curso', 'warning');
         return;
     }
+    
+    try {
+        // Buscar cursos que coincidan con el título
+        const foundCourses = courses.filter(course => 
+            course.curNom.toLowerCase().includes(courseName.toLowerCase())
+        );
+        
+        if (foundCourses.length === 0) {
+            resultsDiv.innerHTML = `
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    No se encontraron cursos con ese título.
+                </div>
+            `;
+            return;
+        }
+        
+        // Si hay múltiples cursos, mostrar lista para que elija
+        if (foundCourses.length > 1) {
+            let html = `
+                <div class="alert alert-info">
+                    <h6><i class="bi bi-book-fill me-2"></i>Se encontraron ${foundCourses.length} cursos. Seleccione uno:</h6>
+                    <div class="list-group mt-2">
+            `;
+            
+            foundCourses.forEach(course => {
+                html += `
+                    <button type="button" class="list-group-item list-group-item-action" onclick="getStudentsByCourseId(${course.curId}, '${course.curNom}')">
+                        <strong>${course.curNom}</strong> - ${course.curCreditos} créditos
+                    </button>
+                `;
+            });
+            
+            html += `
+                    </div>
+                </div>
+            `;
+            resultsDiv.innerHTML = html;
+            return;
+        }
+        
+        // Si solo hay un curso, obtener sus estudiantes directamente
+        await getStudentsByCourseId(foundCourses[0].curId, foundCourses[0].curNom);
+        
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('Error al buscar cursos', 'danger');
+    }
+}
+
+/**
+ * Obtener estudiantes por ID de curso
+ */
+async function getStudentsByCourseId(cursoId, cursoNombre) {
+    const resultsDiv = document.getElementById('queryResults');
     
     try {
         const response = await fetch(`${API_ENDPOINTS.cursos}/${cursoId}/estudiantes`);
@@ -827,17 +958,18 @@ async function getStudentsByCourse() {
             if (estudiantes.length === 0) {
                 resultsDiv.innerHTML = `
                     <div class="alert alert-info">
-                        <i class="bi bi-info-circle me-2"></i>
-                        No hay estudiantes asignados a este curso.
+                        <h6><i class="bi bi-book-fill me-2"></i>Curso: ${cursoNombre}</h6>
+                        <p class="mb-0"><i class="bi bi-info-circle me-2"></i>No hay estudiantes asignados a este curso.</p>
                     </div>
                 `;
             } else {
                 let html = `
                     <div class="alert alert-success">
-                        <h6><i class="bi bi-people-fill me-2"></i>Estudiantes en el curso (${estudiantes.length})</h6>
+                        <h6><i class="bi bi-book-fill me-2"></i>Curso: ${cursoNombre}</h6>
+                        <p class="mb-2"><i class="bi bi-people-fill me-2"></i>Estudiantes matriculados: ${estudiantes.length}</p>
                         <div class="table-responsive mt-2">
-                            <table class="table table-sm">
-                                <thead>
+                            <table class="table table-sm table-bordered">
+                                <thead class="table-light">
                                     <tr>
                                         <th>Cédula</th>
                                         <th>Nombre Completo</th>
