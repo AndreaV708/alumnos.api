@@ -383,163 +383,250 @@ function populateCourseSelect() {
  * Poblar select de cursos para consultas (limpiar campos)
  */
 function populateQueryCourseSelect() {
-    const courseNameInput = document.getElementById('courseNameForStudents');
-    const studentCedulaInput = document.getElementById('studentCedulaForCourse');
+    const courseSearchInput = document.getElementById('courseSearchForQuery');
+    const studentSearchInput = document.getElementById('studentSearchForQuery');
     const courseSelect = document.getElementById('courseSelectForQuery');
+    const studentCedulaHidden = document.getElementById('studentCedulaForCourse');
     const queryResultsCourse = document.getElementById('queryResultsCourse');
     const queryResultsStudent = document.getElementById('queryResultsStudent');
+    const courseQuerySuggestions = document.getElementById('courseQuerySuggestions');
+    const studentQuerySuggestions = document.getElementById('studentQuerySuggestions');
     
-    if (courseNameInput) courseNameInput.value = '';
-    if (studentCedulaInput) studentCedulaInput.value = '';
-    if (courseSelect) {
-        courseSelect.innerHTML = '<option value="">Curso encontrado aparecerá aquí</option>';
-        courseSelect.disabled = true;
-    }
-    if (queryResultsCourse) {
-        queryResultsCourse.innerHTML = '';
-    }
-    if (queryResultsStudent) {
-        queryResultsStudent.innerHTML = '';
-    }
+    if (courseSearchInput) courseSearchInput.value = '';
+    if (studentSearchInput) studentSearchInput.value = '';
+    if (courseSelect) courseSelect.value = '';
+    if (studentCedulaHidden) studentCedulaHidden.value = '';
+    if (courseQuerySuggestions) courseQuerySuggestions.style.display = 'none';
+    if (studentQuerySuggestions) studentQuerySuggestions.style.display = 'none';
+    if (queryResultsCourse) queryResultsCourse.innerHTML = '';
+    if (queryResultsStudent) queryResultsStudent.innerHTML = '';
 }
 
 /**
- * Buscar curso para consulta
+ * Autocompletado de curso para consulta
  */
-async function searchCourseForQuery() {
-    const courseNameInput = document.getElementById('courseNameForStudents').value.trim();
-    const courseSelect = document.getElementById('courseSelectForQuery');
-    const queryResultsCourse = document.getElementById('queryResultsCourse');
+async function searchCourseForQueryAutocomplete() {
+    const searchInput = document.getElementById('courseSearchForQuery');
+    const searchValue = searchInput.value.trim();
+    const suggestionsDiv = document.getElementById('courseQuerySuggestions');
     
-    if (!courseNameInput) {
-        showToast('Ingrese un título para buscar', 'warning');
+    if (searchValue.length === 0) {
+        suggestionsDiv.style.display = 'none';
+        suggestionsDiv.innerHTML = '';
+        document.getElementById('queryResultsCourse').innerHTML = '';
         return;
     }
     
     try {
         const foundCourses = courses.filter(course => 
-            course.curNom.toLowerCase().includes(courseNameInput.toLowerCase())
+            course.curNom.toLowerCase().includes(searchValue.toLowerCase())
         );
         
         if (foundCourses.length > 0) {
-            courseSelect.innerHTML = '';
+            suggestionsDiv.innerHTML = '';
             foundCourses.forEach(course => {
-                courseSelect.innerHTML += `<option value="${course.curId}">${course.curNom} - ${course.curCreditos} créditos</option>`;
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.className = 'list-group-item list-group-item-action';
+                item.innerHTML = `<strong>${course.curNom}</strong> - ${course.curCreditos} créditos`;
+                item.onclick = () => selectCourseForQuery(course);
+                suggestionsDiv.appendChild(item);
             });
-            courseSelect.disabled = false;
-            queryResultsCourse.innerHTML = '';
-            showToast(`${foundCourses.length} curso(s) encontrado(s)`, 'success');
+            suggestionsDiv.style.display = 'block';
         } else {
-            courseSelect.innerHTML = '<option value="">No se encontraron cursos</option>';
-            courseSelect.disabled = true;
-            queryResultsCourse.innerHTML = '<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>No se encontraron cursos con ese título.</div>';
-            showToast('No se encontraron cursos', 'warning');
+            suggestionsDiv.innerHTML = '<div class="list-group-item">No se encontraron cursos</div>';
+            suggestionsDiv.style.display = 'block';
         }
     } catch (error) {
         console.error('Error:', error);
-        showToast('Error al buscar curso', 'danger');
     }
+}
+
+/**
+ * Seleccionar curso del autocompletado y obtener estudiantes
+ */
+async function selectCourseForQuery(course) {
+    document.getElementById('courseSearchForQuery').value = `${course.curNom} - ${course.curCreditos} créditos`;
+    document.getElementById('courseSelectForQuery').value = course.curId;
+    document.getElementById('courseQuerySuggestions').style.display = 'none';
+    
+    // Obtener estudiantes automáticamente
+    await getStudentsByCourseId(course.curId, course.curNom);
+}
+
+/**
+ * Autocompletado de estudiante para consulta
+ */
+async function searchStudentForQueryAutocomplete() {
+    const searchInput = document.getElementById('studentSearchForQuery');
+    const searchValue = searchInput.value.trim();
+    const suggestionsDiv = document.getElementById('studentQuerySuggestions');
+    
+    if (searchValue.length === 0) {
+        suggestionsDiv.style.display = 'none';
+        suggestionsDiv.innerHTML = '';
+        document.getElementById('queryResultsStudent').innerHTML = '';
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_ENDPOINTS.alumnos}/buscar?cedula=${encodeURIComponent(searchValue)}`);
+        
+        if (response.ok) {
+            const foundStudents = await response.json();
+            
+            if (foundStudents.length > 0) {
+                suggestionsDiv.innerHTML = '';
+                foundStudents.forEach(student => {
+                    const item = document.createElement('button');
+                    item.type = 'button';
+                    item.className = 'list-group-item list-group-item-action';
+                    item.innerHTML = `<strong>${student.estCed}</strong> - ${student.estNom} ${student.estApe}`;
+                    item.onclick = () => selectStudentForQuery(student);
+                    suggestionsDiv.appendChild(item);
+                });
+                suggestionsDiv.style.display = 'block';
+            } else {
+                suggestionsDiv.innerHTML = '<div class="list-group-item">No se encontraron estudiantes</div>';
+                suggestionsDiv.style.display = 'block';
+            }
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+/**
+ * Seleccionar estudiante del autocompletado y obtener curso
+ */
+async function selectStudentForQuery(student) {
+    document.getElementById('studentSearchForQuery').value = `${student.estCed} - ${student.estNom} ${student.estApe}`;
+    document.getElementById('studentCedulaForCourse').value = student.estCed;
+    document.getElementById('studentQuerySuggestions').style.display = 'none';
+    
+    // Obtener curso automáticamente
+    await getCourseByStudentId(student.estCed);
 }
 
 /**
  * Poblar selects para asignación (limpiar campos)
  */
 function populateAssignmentSelects() {
-    const studentCedulaInput = document.getElementById('assignStudentCedula');
-    const courseNameInput = document.getElementById('assignCourseName');
+    const studentSearchInput = document.getElementById('assignStudentSearch');
+    const courseSearchInput = document.getElementById('assignCourseSearch');
     const studentSelect = document.getElementById('assignStudentSelect');
     const courseSelect = document.getElementById('assignCourseSelect');
+    const studentSuggestions = document.getElementById('studentSuggestions');
+    const courseSuggestions = document.getElementById('courseSuggestions');
     const assignmentResults = document.getElementById('assignmentResults');
     
-    if (studentCedulaInput) studentCedulaInput.value = '';
-    if (courseNameInput) courseNameInput.value = '';
-    if (studentSelect) {
-        studentSelect.innerHTML = '<option value="">Estudiante encontrado aparecerá aquí</option>';
-        studentSelect.disabled = true;
-    }
-    if (courseSelect) {
-        courseSelect.innerHTML = '<option value="">Curso encontrado aparecerá aquí</option>';
-        courseSelect.disabled = true;
-    }
+    if (studentSearchInput) studentSearchInput.value = '';
+    if (courseSearchInput) courseSearchInput.value = '';
+    if (studentSelect) studentSelect.value = '';
+    if (courseSelect) courseSelect.value = '';
+    if (studentSuggestions) studentSuggestions.style.display = 'none';
+    if (courseSuggestions) courseSuggestions.style.display = 'none';
     if (assignmentResults) {
         assignmentResults.innerHTML = '<div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>Busque un estudiante y un curso para realizar la asignación.</div>';
     }
 }
 
 /**
- * Buscar estudiante para asignación por cédula
+ * Autocompletado de estudiante para asignación
  */
-async function searchStudentForAssignment() {
-    const cedulaInput = document.getElementById('assignStudentCedula').value.trim();
-    const studentSelect = document.getElementById('assignStudentSelect');
+async function searchStudentAutocomplete() {
+    const searchInput = document.getElementById('assignStudentSearch');
+    const searchValue = searchInput.value.trim();
+    const suggestionsDiv = document.getElementById('studentSuggestions');
     
-    if (!cedulaInput) {
-        showToast('Ingrese una cédula para buscar', 'warning');
+    if (searchValue.length === 0) {
+        suggestionsDiv.style.display = 'none';
+        suggestionsDiv.innerHTML = '';
         return;
     }
     
     try {
-        // Buscar estudiantes que contengan el texto ingresado
-        const response = await fetch(`${API_ENDPOINTS.alumnos}/buscar?cedula=${encodeURIComponent(cedulaInput)}`);
+        const response = await fetch(`${API_ENDPOINTS.alumnos}/buscar?cedula=${encodeURIComponent(searchValue)}`);
         
         if (response.ok) {
             const foundStudents = await response.json();
             
             if (foundStudents.length > 0) {
-                studentSelect.innerHTML = '';
+                suggestionsDiv.innerHTML = '';
                 foundStudents.forEach(student => {
-                    studentSelect.innerHTML += `<option value="${student.estCed}">${student.estCed} - ${student.estNom} ${student.estApe}</option>`;
+                    const item = document.createElement('button');
+                    item.type = 'button';
+                    item.className = 'list-group-item list-group-item-action';
+                    item.innerHTML = `<strong>${student.estCed}</strong> - ${student.estNom} ${student.estApe}`;
+                    item.onclick = () => selectStudent(student);
+                    suggestionsDiv.appendChild(item);
                 });
-                studentSelect.disabled = false;
-                showToast(`${foundStudents.length} estudiante(s) encontrado(s)`, 'success');
+                suggestionsDiv.style.display = 'block';
             } else {
-                studentSelect.innerHTML = '<option value="">No se encontraron estudiantes</option>';
-                studentSelect.disabled = true;
-                showToast('No se encontraron estudiantes', 'warning');
+                suggestionsDiv.innerHTML = '<div class="list-group-item">No se encontraron estudiantes</div>';
+                suggestionsDiv.style.display = 'block';
             }
-        } else {
-            showToast('Error al buscar estudiante', 'danger');
         }
     } catch (error) {
         console.error('Error:', error);
-        showToast('Error de conexión', 'danger');
     }
 }
 
 /**
- * Buscar curso para asignación por título
+ * Seleccionar estudiante del autocompletado
  */
-async function searchCourseForAssignment() {
-    const courseNameInput = document.getElementById('assignCourseName').value.trim();
-    const courseSelect = document.getElementById('assignCourseSelect');
+function selectStudent(student) {
+    document.getElementById('assignStudentSearch').value = `${student.estCed} - ${student.estNom} ${student.estApe}`;
+    document.getElementById('assignStudentSelect').value = student.estCed;
+    document.getElementById('studentSuggestions').style.display = 'none';
+}
+
+/**
+ * Autocompletado de curso para asignación
+ */
+async function searchCourseAutocomplete() {
+    const searchInput = document.getElementById('assignCourseSearch');
+    const searchValue = searchInput.value.trim();
+    const suggestionsDiv = document.getElementById('courseSuggestions');
     
-    if (!courseNameInput) {
-        showToast('Ingrese un título para buscar', 'warning');
+    if (searchValue.length === 0) {
+        suggestionsDiv.style.display = 'none';
+        suggestionsDiv.innerHTML = '';
         return;
     }
     
     try {
-        // Buscar cursos que contengan el texto ingresado
         const foundCourses = courses.filter(course => 
-            course.curNom.toLowerCase().includes(courseNameInput.toLowerCase())
+            course.curNom.toLowerCase().includes(searchValue.toLowerCase())
         );
         
         if (foundCourses.length > 0) {
-            courseSelect.innerHTML = '';
+            suggestionsDiv.innerHTML = '';
             foundCourses.forEach(course => {
-                courseSelect.innerHTML += `<option value="${course.curId}">${course.curNom} - ${course.curCreditos} créditos</option>`;
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.className = 'list-group-item list-group-item-action';
+                item.innerHTML = `<strong>${course.curNom}</strong> - ${course.curCreditos} créditos`;
+                item.onclick = () => selectCourse(course);
+                suggestionsDiv.appendChild(item);
             });
-            courseSelect.disabled = false;
-            showToast(`${foundCourses.length} curso(s) encontrado(s)`, 'success');
+            suggestionsDiv.style.display = 'block';
         } else {
-            courseSelect.innerHTML = '<option value="">No se encontraron cursos</option>';
-            courseSelect.disabled = true;
-            showToast('No se encontraron cursos', 'warning');
+            suggestionsDiv.innerHTML = '<div class="list-group-item">No se encontraron cursos</div>';
+            suggestionsDiv.style.display = 'block';
         }
     } catch (error) {
         console.error('Error:', error);
-        showToast('Error al buscar curso', 'danger');
     }
+}
+
+/**
+ * Seleccionar curso del autocompletado
+ */
+function selectCourse(course) {
+    document.getElementById('assignCourseSearch').value = `${course.curNom} - ${course.curCreditos} créditos`;
+    document.getElementById('assignCourseSelect').value = course.curId;
+    document.getElementById('courseSuggestions').style.display = 'none';
 }
 
 // ============================================
@@ -929,20 +1016,15 @@ async function assignStudentToCourse() {
 // ============================================
 
 /**
- * Obtener estudiantes por ID de curso desde el selector
+ * Obtener estudiantes por ID de curso
  */
-async function getStudentsByCourseId() {
-    const courseSelect = document.getElementById('courseSelectForQuery');
-    const cursoId = courseSelect.value;
+async function getStudentsByCourseId(cursoId, cursoNombre) {
     const resultsDiv = document.getElementById('queryResultsCourse');
     
     if (!cursoId) {
-        showToast('Seleccione un curso del selector', 'warning');
+        showToast('Seleccione un curso', 'warning');
         return;
     }
-    
-    const selectedOption = courseSelect.options[courseSelect.selectedIndex];
-    const cursoNombre = selectedOption.text;
     
     try {
         const response = await fetch(`${API_ENDPOINTS.cursos}/${cursoId}/estudiantes`);
@@ -1001,7 +1083,52 @@ async function getStudentsByCourseId() {
 }
 
 /**
- * Obtener curso de un estudiante
+ * Obtener curso de un estudiante por ID
+ */
+async function getCourseByStudentId(cedula) {
+    const resultsDiv = document.getElementById('queryResultsStudent');
+    
+    if (!cedula) {
+        showToast('Seleccione un estudiante', 'warning');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_ENDPOINTS.alumnos}/${cedula}/curso`);
+        if (response.ok) {
+            const alumno = await response.json();
+            
+            if (!alumno.cursoId) {
+                resultsDiv.innerHTML = `
+                    <div class="alert alert-warning mt-3">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        El estudiante <strong>${alumno.estNom} ${alumno.estApe}</strong> no está asignado a ningún curso.
+                    </div>
+                `;
+            } else {
+                resultsDiv.innerHTML = `
+                    <div class="alert alert-success mt-3">
+                        <h6><i class="bi bi-book-fill me-2"></i>Información del Curso</h6>
+                        <p class="mb-1"><strong>Estudiante:</strong> ${alumno.estNom} ${alumno.estApe} (${alumno.estCed})</p>
+                        <p class="mb-1"><strong>Curso:</strong> ${alumno.cursoNombre}</p>
+                        <p class="mb-0"><strong>Créditos:</strong> ${alumno.cursoCreditos}</p>
+                    </div>
+                `;
+            }
+        } else if (response.status === 404) {
+            showToast('Estudiante no encontrado', 'danger');
+            resultsDiv.innerHTML = '';
+        } else {
+            showToast('Error al consultar el curso del estudiante', 'danger');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('Error de conexión', 'danger');
+    }
+}
+
+/**
+ * Obtener curso de un estudiante (función legacy)
  */
 async function getCourseByStudent() {
     const cedula = document.getElementById('studentCedulaForCourse').value.trim();
@@ -1219,4 +1346,15 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error en la inicialización:', error);
         });
     }
+    
+    // Cerrar sugerencias al hacer clic fuera
+    document.addEventListener('click', function(event) {
+        const suggestions = ['studentSuggestions', 'courseSuggestions', 'courseQuerySuggestions', 'studentQuerySuggestions'];
+        suggestions.forEach(id => {
+            const div = document.getElementById(id);
+            if (div && !event.target.closest(`#${id}`) && !event.target.closest('input')) {
+                div.style.display = 'none';
+            }
+        });
+    });
 });
