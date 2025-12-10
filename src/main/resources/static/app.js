@@ -796,7 +796,8 @@ async function saveStudent() {
  * Eliminar estudiante
  */
 async function deleteStudent(id) {
-    if (confirm('¿Está seguro de que desea eliminar este estudiante?')) {
+    const confirmed = await showConfirm('¿Está seguro de que desea eliminar este estudiante?');
+    if (confirmed) {
         try {
             const response = await fetch(`${API_ENDPOINTS.alumnos}/${id}`, {
                 method: 'DELETE'
@@ -904,7 +905,8 @@ async function saveCourse() {
  * Eliminar curso
  */
 async function deleteCourse(id) {
-    if (confirm('¿Está seguro de que desea eliminar este curso?')) {
+    const confirmed = await showConfirm('¿Está seguro de que desea eliminar este curso?');
+    if (confirmed) {
         try {
             const response = await fetch(`${API_ENDPOINTS.cursos}/${id}`, {
                 method: 'DELETE'
@@ -1296,6 +1298,42 @@ function showToast(message, type = 'info') {
  */
 function showAlert(message, type = 'danger') {
     showToast(message, type);
+}
+
+/**
+ * Mostrar modal de confirmación de Bootstrap
+ */
+function showConfirm(message) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('confirmModal');
+        const modalBody = document.getElementById('confirmModalBody');
+        const confirmButton = document.getElementById('confirmModalButton');
+        
+        modalBody.textContent = message;
+        
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+        
+        const handleConfirm = () => {
+            bsModal.hide();
+            cleanup();
+            resolve(true);
+        };
+        
+        const handleCancel = () => {
+            bsModal.hide();
+            cleanup();
+            resolve(false);
+        };
+        
+        const cleanup = () => {
+            confirmButton.removeEventListener('click', handleConfirm);
+            modal.removeEventListener('hidden.bs.modal', handleCancel);
+        };
+        
+        confirmButton.addEventListener('click', handleConfirm);
+        modal.addEventListener('hidden.bs.modal', handleCancel, { once: true });
+    });
 }
 
 // ============================================

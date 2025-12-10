@@ -12,7 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
+// NOTA: En un sistema real, estos endpoints estarían protegidos por Spring Security
+    // Para los fines de esta demostración, la validación de roles se realiza a nivel de frontend
 @RestController
 @RequestMapping("/api/alumnos")
 @CrossOrigin(origins = {"*"})
@@ -20,10 +21,6 @@ import java.util.List;
 public class AlumnoController {
     
     private final AlumnoService service;
-    
-    // NOTA: En un sistema real, estos endpoints estarían protegidos por Spring Security
-    // Para los fines de esta demostración, la validación de roles se realiza a nivel de frontend
-
     @GetMapping
     public ResponseEntity<List<AlumnoResponseDto>> listar() {
         return ResponseEntity.ok(service.listar());

@@ -20,7 +20,6 @@ import java.util.List;
 public class CursoController {
 
     private final CursoService cursoService;
-    
     // NOTA: En un sistema real, estos endpoints estarían protegidos por Spring Security
     // Para los fines de esta demostración, la validación se realiza a nivel de frontend
 
