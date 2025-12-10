@@ -73,6 +73,12 @@ public class AlumnoService {
 
         // Actualizar curso si se proporciona curId
         if (dto.curId() != null) {
+            // Validar que el estudiante no tenga ya un curso asignado
+            if (alumno.getCurso() != null && !alumno.getCurso().getCurId().equals(dto.curId())) {
+                throw new IllegalStateException("El estudiante ya está asignado al curso: " + alumno.getCurso().getCurNom() + 
+                        ". No puede ser reasignado a otro curso. Cada estudiante solo puede pertenecer a un curso.");
+            }
+            
             Curso curso = cursoRepository.findById(dto.curId())
                     .orElseThrow(() -> new EntityNotFoundException("Curso no encontrado: " + dto.curId()));
             alumno.setCurso(curso);
